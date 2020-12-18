@@ -8,17 +8,17 @@
     "eject": "expo eject"
   },
   "dependencies": {
-    "expo": "~36.0.0",
+    "expo": "^40.0.0",
     "mobx": "^5.15.4",
     "mobx-react": "^6.1.8",
-    "react": "~16.9.0",
-    "react-dom": "^16.13.0",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-36.0.0.tar.gz",
-    "react-native-web": "^0.12.2"
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-40.0.0.tar.gz",
+    "react-native-web": "~0.13.12"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0",
-    "babel-preset-expo": "~8.0.0"
+    "@babel/core": "~7.9.0",
+    "babel-preset-expo": "8.3.0"
   },
   "private": true
 }
