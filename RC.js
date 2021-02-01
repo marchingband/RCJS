@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Dimensions, PanResponder, Platform, StyleSheet, TouchableWithoutFeedback, Text, View } from 'react-native';
+import { Dimensions, PanResponder, Platform, StyleSheet, TouchableWithoutFeedback, Text, View, TextInput as TI, SafeAreaView } from 'react-native';
 
 import {observer} from 'mobx-react'
 import {observable} from 'mobx'
@@ -13,19 +13,13 @@ const body_style = {
     height:'100%',
     maxWidth:'100%',
     maxHeight:'100%',
-    // overflowY:'hidden',
     overflowX:'hidden',
     overflow:'hidden',
     margin:0,
     padding:0,
-    // overscrollBehavior:'contain',
     overscrollBehaviorX:'none',
     overscrollBehaviory:'none',
     position:'fixed',
-    // touchAction:'pan-down'
-    // border:'3px solid red',
-    // boxSizing:'border-box',
-    // webkitOverflowScrolling:'touch'
 }
 
 var pixel_size={};
@@ -36,14 +30,26 @@ const RC_setup_web = () => {
     el = document.getElementsByTagName('body')[0]
     Object.assign(el.style,body_style)
 
-    var get_pixel_size = () => el.getBoundingClientRect().width/100
+    var get_pixel_size = () => {
+      const isPortrait = el.getBoundingClientRect().width > el.getBoundingClientRect().height
+      if(isPortrait){
+        return el.getBoundingClientRect().height/100
+      } else {
+        return el.getBoundingClientRect().width/100
+      }
+    }
     pixel_size = observable.box(get_pixel_size())
     window.addEventListener('resize',()=>pixel_size.set(get_pixel_size()))
 }
 
 const RC_setup_native = () => {
-    let width = Dimensions.get('window').width
-    pixel_size.get = () => width / 100
+    let {width,height} = Dimensions.get('window')
+    const isPortrait = width > height
+    if(isPortrait){
+      pixel_size.get = () => height / 100
+    } else {
+      pixel_size.get = () => width / 100
+    }
 }
 
 if(web){
@@ -137,12 +143,12 @@ export var RC = observer( props => {
     const {onClick, children, style, text} = props
     return(
         <View
-            style={{
-                ...rc_parse(props),
-                ...rc_default_props,
-                ...rc_if_button_props(onClick),
-                ...style      
-            }}
+            style={[
+                rc_parse(props),
+                rc_default_props,
+                rc_if_button_props(onClick),
+                style      
+            ]}
             onClick={onClick}
             onTouchEnd={ web ? undefined : onClick }
         >
@@ -264,62 +270,20 @@ export var Knob = observer(props=>{
     )
 })
 
-// const c = "\u25a1"
 const c = "\u25a2"
-// const c = "\u2588"
-// const c = "\u2B1c"
-// const c = "\u258c"
-// const c = "\u2590"
 const hidden = {
     width:0,
     height:0,
     opacity:0
 }
 
-export var TextInput = observer(props => {
-    const [txt, setTxt] = useState('')
-    const [active, setActive] = useState(false)
-    const input = useRef(null)
-    const {onSubmit, onChange, placeholder} = props
-    return (
-        <RC 
-            {...props} 
-            style={ active?
-                {border:"1px solid blue",color:'black'} :
-                {border:'1px solid black',color:'grey'}
-            }
-            onClick={() => input.current.focus()}
-            text={txt!='' ? active ? txt + c : txt : placeholder}
-        >
-            <form
-                onSubmit={e=>{
-                    e.preventDefault()
-                    onSubmit && onSubmit(txt)
-                    input.current.blur()
-                    setTxt('')
-                }}
-                style={hidden}
-            >
-                <input
-                    ref={input}
-                    type='text'
-                    value={txt}
-                    onChange={e => {
-                        setTxt(e.target.value)
-                        onChange && onChange(e.target.value)
-                    }}
-                    onFocus={()=>setActive(true)}
-                    onBlur={()=>setActive(false)}
-                    style={hidden}
-                />
-                <input 
-                    type='submit'
-                    style={hidden}
-                />
-            </form>
-        </RC>
-    )
-  })
+export var TextInput = observer(props=>
+        <TI 
+          style={{width:100,height:50,borderColor:'black',borderWidth:1,...rc_default_props,...rc_parse(props), color:'grey'}}
+          onChange={x=>console.log(x)}
+          defaultValue='text input'
+        />
+)
 
 export var Page = observer(props=>{
     if(props.name == props.current){
@@ -329,10 +293,19 @@ export var Page = observer(props=>{
     }
 })
 
-export var App = x => observer(x)
+export var App = x => 
+  Platform.OS == 'web' ? 
+    observer(x) : 
+    observer(()=>
+      <SafeAreaView style={{flex:1}}>
+        <View>
+          { x() }
+        </View>
+      </SafeAreaView>
+    )
 
 var state;
-export var useFlux = s => {
+export var flux = s => {
     state = observable(s)
     return state
 }
